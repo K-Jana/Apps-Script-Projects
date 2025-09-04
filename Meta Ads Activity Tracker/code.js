@@ -1,3 +1,59 @@
+/**
+ * ================================
+ * Meta Ads Activity Logger & Notifier
+ * ================================
+ * 
+ * WHY THIS SCRIPT IS USED:
+ * -------------------------
+ * - Tracks changes in Facebook/Meta Ads accounts (campaigns, ad sets, ads).
+ * - Stores all activity logs in a Google Spreadsheet for auditing/reporting.
+ * - Sends email notifications when specific whitelisted users (e.g., team members) 
+ *   make changes, so the team can monitor activity in real time.
+ * - Helps with transparency, accountability, and faster troubleshooting.
+ *
+ * HOW IT WORKS:
+ * --------------
+ * 1. Configuration:
+ *    - META_ACCESS_TOKEN: Meta API access token (replace with your own).
+ *    - GRAPH_VERSION: The Graph API version to query (e.g., "v23.0").
+ *    - SPREADSHEET_ID: Google Spreadsheet where logs will be stored.
+ *    - MAIL_USER_FILTERS: List of team members whose changes should trigger email notifications.
+ *    - MAIL_TO: List of recipients for activity email alerts.
+ *
+ * 2. Dispatcher:
+ *    - `getMetaActivitiesAllAccounts()` runs all account fetch functions at once.
+ *    - Each `getMetaActivities_<Account>()` function calls `fetchActivitiesForAccount()`
+ *      for a specific ad account.
+ *
+ * 3. Data Fetching:
+ *    - Fetches campaigns, ad sets, and ads for the given account.
+ *    - Fetches activities (changes) from the last 12 hours using Meta’s Graph API.
+ *    - Maps activity object IDs to human-readable campaign/ad set/ad names.
+ *    - Writes results into the correct sheet in Google Sheets (creates it if missing).
+ *
+ * 4. Notifications:
+ *    - If the actor (user who made the change) matches one in MAIL_USER_FILTERS,
+ *      their change details are collected.
+ *    - These are sent via email to all addresses in MAIL_TO as a formatted HTML table.
+ *
+ * 5. Helpers:
+ *    - `fetchPage_`: Handles Graph API pagination.
+ *    - `formatExtraData`: Converts extra_data JSON into a readable string.
+ *    - `normalizeObjectType`: Makes object types consistent (e.g., ADGROUP → AD).
+ *
+ * HOW TO USE:
+ * ------------
+ * - Deploy this script inside Google Apps Script (https://script.google.com/).
+ * - Set your own META_ACCESS_TOKEN, GRAPH_VERSION, SPREADSHEET_ID, and MAIL_TO values.
+ * - Add your Meta Ad Account IDs to the dispatcher functions.
+ * - Schedule it to run automatically (e.g., every 12 hours) using Apps Script triggers.
+ *
+ * RESULT:
+ * --------
+ * - Google Sheet: Each account gets its own sheet tab with a log of changes.
+ * - Email Alerts: Team receives notifications when whitelisted users make changes.
+ */
+
 // CONFIG 
 const META_ACCESS_TOKEN = 'YOUR_ACCESS_TOKEN';
 const GRAPH_VERSION = 'vXX.X';
