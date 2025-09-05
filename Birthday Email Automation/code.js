@@ -73,3 +73,63 @@ function sendBirthdayEmails() {
 
   Logger.log(" Birthday email process completed.");
 }
+
+
+//Check email validity before mailing
+function checkInvalidEmails() {
+  Logger.log("Starting invalid email check...");
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Birthdays");
+  const data = sheet.getDataRange().getValues();
+  const header = data[0];
+
+  const nameIndex = header.indexOf("First Name");
+  const emailIndex = header.indexOf("Email");
+  const statusIndex = header.indexOf("Status");
+
+  Logger.log("Header columns - Name: " + nameIndex + ", Email: " + emailIndex + ", Status: " + statusIndex);
+
+  // Fetch Gmail threads from the last 1 day with common bounce-back subjects
+  Logger.log("Searching for bounce-back emails...");
+  const bounceThreads = GmailApp.search('subject:("Mail Delivery Subsystem" OR "Delivery Status Notification" OR "Undeliverable") newer_than:1d');
+
+  Logger.log("Found " + bounceThreads.length + " bounce-back threads.");
+
+  const bouncedEmails = new Set();
+
+  bounceThreads.forEach((thread, tIndex) => {
+    const messages = thread.getMessages();
+    Logger.log(`Thread ${tIndex + 1}: contains ${messages.length} messages.`);
+
+    messages.forEach((message, mIndex) => {
+      const body = message.getBody();
+      const emailMatches = body.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
+
+      if (emailMatches) {
+        Logger.log(`Message ${mIndex + 1}: Found emails - ${emailMatches.join(', ')}`);
+        emailMatches.forEach(email => bouncedEmails.add(email.toLowerCase()));
+      } else {
+        Logger.log(`Message ${mIndex + 1}: No email matches found.`);
+      }
+    });
+  });
+
+  Logger.log("Total unique bounced emails collected: " + bouncedEmails.size);
+
+  // Update the sheet if the email is found in bounced list
+  for (let i = 1; i < data.length; i++) {
+    const rowEmail = data[i][emailIndex]?.toLowerCase();
+    const currentStatus = data[i][statusIndex];
+
+    Logger.log(`Checking row ${i + 1}: Email = ${rowEmail}, Status = ${currentStatus}`);
+
+    if (rowEmail && currentStatus === "Sent" && bouncedEmails.has(rowEmail)) {
+      sheet.getRange(i + 1, statusIndex + 1).setValue("Invalid Email");
+      Logger.log(`Row ${i + 1}: Marked as Invalid Email (${rowEmail})`);
+    }
+  }
+
+  Logger.log("Invalid email check completed.");
+}
+
+
