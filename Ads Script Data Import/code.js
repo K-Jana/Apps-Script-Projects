@@ -1,7 +1,7 @@
 
 function main() {
   let ss = SpreadsheetApp.openByUrl('Replcewithurl');// add your sheet url here
-  
+
 
   // define metrics and dimensions used. wrap with spaces for safety
   let campName    = ' campaign.name ';
@@ -29,7 +29,7 @@ function main() {
   
 
   // call report function to pull data & push to named sheet
-  runReport(campQuery, ss.getSheetByName('Trail - Google'));  //example
+  runReport(campQuery, ss.getSheetByName('SheetName'));  //example
 
 }
 
